@@ -104,7 +104,7 @@ public :: filter_sync_keys_time, &
 character(len=*), parameter :: source = 'filter_mod.f90'
 
 ! Some convenient global storage items
-character(len=512) :: msgstring, string2, string3
+character(len=512)      :: msgstring
 
 integer :: trace_level, timestamp_level
 
