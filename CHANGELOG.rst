@@ -67,7 +67,6 @@ The changes are now listed with the most recent at the top.
 
 - The array uniquek is now initialized to an invalid level to prevent random
   reasonable level values in the array.
->>>>>>> main
 
 **June 24 2021 :: bug fix for cam-fv model_interpolate. Tag: v.9.11.3**
 
