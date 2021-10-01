@@ -887,7 +887,7 @@ do i = start_var, end_var
 
    if (failure) then
       write(msgstring2,*)'the use of scale_factor and/or offset is not supported.'
-      call error_handler(E_ERR,routine,varname, source, text2=msgstring2)
+      call error_handler(E_ERR,'read_variables',varname, source, text2=msgstring2)
    endif
 
    ret = nf90_get_var(ncfile_in, var_id, var_block(istart:iend), count=dims)
