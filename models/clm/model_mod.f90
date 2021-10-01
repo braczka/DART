@@ -125,7 +125,6 @@ public :: get_model_size,         &
           shortest_time_between_assimilations, &
           static_init_model,      &
           nc_write_model_atts,    &
-          get_close_obs,          &
           get_close_state,        &
           pert_model_copies,      &
           write_model_time,       &
@@ -136,6 +135,7 @@ public :: get_model_size,         &
 public::  init_time,              &
           init_conditions,        &
           nc_write_model_vars,    &
+          get_close_obs,          &
           convert_vertical_obs,   &
           convert_vertical_state
 
