@@ -5,9 +5,7 @@
 program dart_to_clm
 
 !----------------------------------------------------------------------
-! purpose: Update the CLM restart file with the DART posterior. If need
-!          be, take the posterior SWE (a diagnostic variable) and
-!          repartition it into prognostic snow layers.
+! purpose: Update the CLM restart file with the DART posterior.
 !
 ! method: Read DART posterior and replace the valid values in the
 !         CLM restart file. Anything with a DART posterior _FillValue 
@@ -66,12 +64,11 @@ character(len=*), parameter :: source = 'dart_to_clm.f90'
 
 character(len=256) :: dart_to_clm_input_file = 'dart_posterior.nc'
 character(len=256) :: dart_to_clm_output_file = 'clm_restart.nc'
-logical            :: repartition_swe = .false.
 integer            :: verbose = 0
 
 namelist /dart_to_clm_nml/ dart_to_clm_input_file, &
                            dart_to_clm_output_file, &
-                           repartition_swe, verbose
+                           verbose
 
 !----------------------------------------------------------------------
 
