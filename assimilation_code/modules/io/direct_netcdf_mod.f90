@@ -72,9 +72,6 @@ use utilities_mod,        only : error_handler, file_to_text, &
                                  find_textfile_dims, file_exist, &
                                  E_MSG, E_ALLMSG, E_ERR, E_DBG, E_WARN
 
-!>@todo FIXME Fully implement the rest of the routines in netcdf_utilities_mod.
-! This will change all the error messages.
-
 use netcdf_utilities_mod, only : nc_check
 
 use mpi_utilities_mod,    only : task_count, send_to, receive_from, my_task_id, &
@@ -849,8 +846,6 @@ integer,  intent(in)    :: start_var
 integer,  intent(in)    :: end_var
 integer,  intent(in)    :: domain
 
-character(len=*), parameter :: routine = 'read_variables'
-
 integer :: i
 integer(i8) :: istart, iend
 integer(i8) :: var_size
@@ -858,12 +853,12 @@ integer, allocatable :: dims(:)
 integer :: ret, var_id
 character(len=NF90_MAX_NAME) :: varname
 
-logical :: allow_missing
+logical :: missing_possible
 logical :: failure
 
 failure = .false.
 
-allow_missing = get_missing_ok_status()
+missing_possible = get_missing_ok_status()
 
 istart = 1
 
@@ -895,12 +890,10 @@ do i = start_var, end_var
       call error_handler(E_ERR,routine,varname, source, text2=msgstring2)
    endif
 
-   ! Finally read the variable.
-
    ret = nf90_get_var(ncfile_in, var_id, var_block(istart:iend), count=dims)
    call nc_check(ret, 'read_variables: nf90_get_var', varname)
 
-   if (allow_missing) call set_dart_missing_value(domain, i, var_block(istart:iend))
+   if (missing_possible) call set_dart_missing_value(var_block(istart:iend), domain, i)
 
    istart = istart + var_size
 
@@ -1006,7 +999,7 @@ allocate(vector(get_domain_size(domain)))
 istart = dart_index ! position in state_ens_handle%vars
 block_size = 0
 
-! read into a temporary array, then fill up copies
+! need to read into a temporary array, then fill up copies
 
 COPIES: do copy = 1, state_ens_handle%my_num_copies
 
@@ -1472,7 +1465,7 @@ real(r8), intent(inout) :: variable(:) ! variable
 
 real(r8) :: minclamp, maxclamp, my_minmax(2)
 character(len=NF90_MAX_NAME) :: varname ! for informational log messages
-logical  :: allow_missing
+logical  :: allow_missing ! used in CLM for state variables
 
 ! if neither bound is set, return early
 minclamp = get_io_clamping_minval(dom_id, var_index)
@@ -1482,6 +1475,16 @@ if (minclamp == missing_r8 .and. maxclamp == missing_r8) return
 
 ! if we get here, either the min, max or both have a clamping value.
   
+!>@todo this is what the code needs to be for CLM and any other
+! model that allows missing values in the state.  right now that
+! is defined in assim_tools_mod but i don't think we can use it
+! because of circular module dependencies.  it should be defined
+! maybe in filter?  and set into some low level module (like types
+! or constants or options_mod so anyone can query it).
+!
+! if we allow missing values in the state (which jeff has never
+! liked because it makes the statistics funny), then these next
+! two lines need to be:
 allow_missing = get_missing_ok_status()
 
 if (allow_missing) then
@@ -1498,6 +1501,7 @@ varname = get_variable_name(dom_id, var_index)
 ! is lower bound set?
 if ( minclamp /= missing_r8 ) then ! missing_r8 is flag for no clamping
    if ( my_minmax(1) < minclamp ) then
+      !>@todo again, if we're allowing missing in state, this has to be masked:
        if (allow_missing) then
           where(variable /= missing_r8) variable = max(minclamp, variable)
        else
@@ -1509,12 +1513,14 @@ endif ! min range set
 ! is upper bound set?
 if ( maxclamp /= missing_r8 ) then ! missing_r8 is flag for no clamping
    if ( my_minmax(2) > maxclamp ) then
+      !>@todo again, if we're allowing missing in state, this has to be masked:
       if (allow_missing) then
          where(variable /= missing_r8) variable = min(maxclamp, variable)
       else
          variable = min(maxclamp, variable)
       endif
    endif
+
 endif ! max range set
 
 end subroutine clamp_variable
@@ -1526,23 +1532,23 @@ end subroutine clamp_variable
 !-------------------------------------------------------------------------------
 
 subroutine write_variables(ncid, var_block, start_var, end_var, domain, &
-                           do_variable_clamping, force_copy)
+                           do_file_clamping, force_copy)
 
 integer,  intent(in)    :: ncid
 real(r8), intent(inout) :: var_block(:)
 integer,  intent(in)    :: start_var
 integer,  intent(in)    :: end_var
 integer,  intent(in)    :: domain
-logical,  intent(in)    :: do_variable_clamping
+logical,  intent(in)    :: do_file_clamping
 logical,  intent(in)    :: force_copy
 
 integer(i8) :: istart, iend, var_size
 integer :: i, ret, var_id
 integer, allocatable :: dims(:)
 
-logical :: allow_missing
+logical :: missing_possible
 
-allow_missing = get_missing_ok_status()
+missing_possible = get_missing_ok_status()
 
 !>@todo reduce output in log file?
 ! clamp_variable() currently prints out a line per variable per ensemble member.
@@ -1565,7 +1571,7 @@ do i = start_var, end_var
    ! set by the model.
    if ( do_io_update(domain, i) .or. force_copy ) then
       ! diagnostic files do not get clamped but restart may be clamped
-      if ( do_io_clamping(domain, i) .and. do_variable_clamping) then
+      if ( do_io_clamping(domain, i) .and. do_file_clamping) then
          call clamp_variable(domain, i, var_block(istart:iend))
       endif
      
@@ -1575,14 +1581,12 @@ do i = start_var, end_var
       dims = get_io_dim_lengths(domain, i)
 !>@todo FIXME, the first variable in the second domain is not found when using coamps_nest.
       ret = nf90_inq_varid(ncid, trim(get_variable_name(domain, i)), var_id)
-      write(msgstring,*) 'nf90_inq_varid "'//trim(get_variable_name(domain,i))//'"'
-      call nc_check(ret, 'write_variables:', msgstring)
+      call nc_check(ret, 'write_variables:', 'nf90_inq_varid "'//trim(get_variable_name(domain,i))//'"')
 
-      if (allow_missing) call set_model_missing_value(domain, i, var_block(istart:iend))
+      if (missing_possible) call set_model_missing_value(var_block(istart:iend), domain, i)
 
       ret = nf90_put_var(ncid, var_id, var_block(istart:iend), count=dims)
-      write(msgstring,*) 'nf90_put_var "'//trim(get_variable_name(domain,i))//'"'
-      call nc_check(ret, 'write_variables:', msgstring)
+      call nc_check(ret, 'write_variables:', 'nf90_put_var "'//trim(get_variable_name(domain,i))//'"')
 
       deallocate(dims)
    endif
@@ -1932,6 +1936,7 @@ end subroutine nc_write_revision_info
 
 !-------------------------------------------------
 !> Write model integer missing_value/_FillValue attributes if they exist
+
 
 subroutine nc_write_missing_value_int(ncFileID, filename, ncVarID, domid, varid)
 
@@ -3027,16 +3032,17 @@ end function find_start_point
 !> replace the netCDF missing_value or _FillValue with
 !> the DART missing value.
 
-subroutine set_dart_missing_value(domain, variable, array)
+subroutine set_dart_missing_value(array, domain, variable)
 
+real(r8), intent(inout) :: array(:)
 integer,  intent(in)    :: domain
 integer,  intent(in)    :: variable
-real(r8), intent(inout) :: array(:)
 
 integer        :: model_missing_valueINT
 real(r4)       :: model_missing_valueR4
 real(digits12) :: model_missing_valueR8
 
+! check to see if variable has missing value attributes
 if ( get_has_missing_value(domain, variable) ) then
 
    select case ( get_xtype(domain, variable) )
@@ -3075,11 +3081,11 @@ end subroutine set_dart_missing_value
 !> replace the DART missing value code with the 
 !> original netCDF missing_value (or _FillValue) value.
 
-subroutine set_model_missing_value(domain, variable, array)
+subroutine set_model_missing_value(array, domain, variable)
 
+real(r8), intent(inout) :: array(:)
 integer,  intent(in)    :: domain
 integer,  intent(in)    :: variable
-real(r8), intent(inout) :: array(:)
 
 integer        :: model_missing_valueINT
 real(r4)       :: model_missing_valueR4
@@ -3091,13 +3097,13 @@ if ( get_has_missing_value(domain, variable) ) then
    select case ( get_xtype(domain, variable) )
       case ( NF90_INT )
          call get_missing_value(domain, variable, model_missing_valueINT)
-         where(array == MISSING_R8)       array = model_missing_valueINT
+         where(array == MISSING_R8) array = model_missing_valueINT
       case ( NF90_FLOAT )
          call get_missing_value(domain, variable, model_missing_valueR4)
-         where(array == MISSING_R8)       array = model_missing_valueR4
+         where(array == MISSING_R8) array = model_missing_valueR4
       case ( NF90_DOUBLE )
          call get_missing_value(domain, variable, model_missing_valueR8)
-         where(array == MISSING_R8)       array = model_missing_valueR8
+         where(array == MISSING_R8) array = model_missing_valueR8
    end select
 
 endif
