@@ -36,7 +36,7 @@ use     location_mod, only : location_type, set_location, get_location,        &
                              write_location, is_vertical, VERTISLEVEL,         &
                              VERTISHEIGHT, LocationDims, get_close_type,       &
                              convert_vertical_obs, convert_vertical_state,     &
-                             loc_get_close_obs   => get_close_obs,             &
+                             get_close_obs,                                    &
                              loc_get_close_state => get_close_state
 
 use    utilities_mod, only : error_handler, E_ALLMSG, E_ERR, E_WARN, E_MSG,    &
@@ -105,8 +105,6 @@ use obs_def_utilities_mod, only : track_status
 
 use     mpi_utilities_mod, only : my_task_id
 
-use           options_mod, only : set_missing_ok_status
-
 use     default_model_mod, only : adv_1step, init_time, init_conditions, &
                                   nc_write_model_vars
 
@@ -127,7 +125,6 @@ public :: get_model_size,         &
           shortest_time_between_assimilations, &
           static_init_model,      &
           nc_write_model_atts,    &
-          get_close_obs,          &
           get_close_state,        &
           pert_model_copies,      &
           write_model_time,       &
@@ -138,6 +135,7 @@ public :: get_model_size,         &
 public::  init_time,              &
           init_conditions,        &
           nc_write_model_vars,    &
+          get_close_obs,          &
           convert_vertical_obs,   &
           convert_vertical_state
 
@@ -479,9 +477,6 @@ call check_namelist_read(iunit, io, 'model_nml')
 ! Record the namelist values used for the run
 if (do_nml_file()) write(nmlfileunit, nml=model_nml)
 if (do_nml_term()) write(     *     , nml=model_nml)
-
-! It is OK for this model to have MISSING_R8 in the DART state.
-call set_missing_ok_status(.true.)
 
 !---------------------------------------------------------------
 ! Set the time step ... causes clm namelists to be read.
@@ -905,35 +900,6 @@ call nc_put_variable(ncid,'pfts1d_ityplun', pfts1d_ityplun, routine)
 call nc_synchronize_file(ncid)
 
 end subroutine nc_write_model_atts
-
-
-!-------------------------------------------------------------------------------
-!> Actually, nothing special about get_close_obs for CLM. Including it here
-!> because we may need a unique one in the future. Right now it is simply
-!> a pass-through to the default routine.
-
-subroutine get_close_obs(gc, base_loc, base_type, locs, loc_qtys, loc_types, &
-                         num_close, close_ind, dist, ens_handle)
-
-type(get_close_type),          intent(in)    :: gc
-type(location_type),           intent(inout) :: base_loc
-type(location_type),           intent(inout) :: locs(:)
-integer,                       intent(in)    :: base_type
-integer,                       intent(in)    :: loc_qtys(:)
-integer,                       intent(in)    :: loc_types(:)
-integer,                       intent(out)   :: num_close
-integer,                       intent(out)   :: close_ind(:)
-real(r8),            optional, intent(out)   :: dist(:)
-type(ensemble_type), optional, intent(in)    :: ens_handle
-
-character(len=*), parameter :: routine = 'get_close_obs'
-
-! default version 
-
-call loc_get_close_obs(gc, base_loc, base_type, locs, loc_qtys, loc_types, &
-                          num_close, close_ind, dist, ens_handle)
-
-end subroutine get_close_obs
 
 
 !----------------------------------------------------------------------------

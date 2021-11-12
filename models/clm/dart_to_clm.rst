@@ -9,12 +9,6 @@ from DART. Only variables with posterior values are updated. The *_FillValue* in
 DART posterior is used as a mask when replacing the value. The original CLM restart file values 
 are maintained when the DART posterior value is *_FillValue*.
 
-Another intended use for ``dart_to_clm`` is to use the posterior snow water equivalent 
-(‘SWE’ - the CLM variable *H2OSNO*) to update the prognostic snow variables in CLM. 
-**This is not implemented yet.** The method will be to simply use the existing ratios 
-of snow in the layers and change them proportionally to achieve the desired 
-posterior SWE.
-
 Usage
 -----
 ``dart_to_clm`` overwrites the output file. See the companion :doc:`clm_to_dart` for a 
@@ -35,7 +29,6 @@ them from prematurely terminating the namelist. These are the defaults:
    &dart_to_clm_nml
       dart_to_clm_input_file  = 'dart_posterior.nc'
       dart_to_clm_output_file = 'clm_restart.nc'
-      repartition_swe         = .false.
       verbose                 = 0
       /
 
@@ -48,10 +41,6 @@ them from prematurely terminating the namelist. These are the defaults:
    ======================= =================== ================================================================= 
    dart_to_clm_input_file  character(len=256)  Name of the DART posterior (the output of the filter program)
    dart_to_clm_output_file character(len=256)  Name of the CLM restart file to modify. 
-                                               | This will be used for the next CLM model advance.
-   repartition_swe         logical             Update the prognostic snow variables in CLM such that 
-                                               the posterior snow water equivalent is correct.
-                                               THIS IS NOT IMPLEMENTED YET.
    verbose                 integer             | Flag to control how much run-time output is created.
                                                | 0   is very little output.
                                                | 1   reports which variables are being updated.
