@@ -396,7 +396,7 @@ character(len=*), parameter :: routine = 'update_snow'
 ! Need repartition_swe to distinguish between all-layer(1) and bottom layer(2)
 ! SWE partitioning
 integer, intent(in) :: ncolumn, nlevel, nlevsno, repartition_swe
-integer  :: icolumn, ilevel, c, partition_layer
+integer  :: icolumn, ilevel, c
 integer  :: VarID, varsize(2)
 real(r8) :: snowden, wt_swe, wt_liq, wt_ice
 
