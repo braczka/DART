@@ -74,13 +74,17 @@ character(len=*), parameter :: source = 'dart_to_clm.f90'
 !------------------------------------------------------------------
 
 character(len=256) :: dart_to_clm_input_file = 'dart_posterior.nc'
-! @fixme  character(len=256) :: dart_to_clm_vector_file = 'dart_posterior_vector.nc'
 character(len=256) :: dart_to_clm_output_file = 'clm_restart.nc'
 integer            :: repartition_swe = 0
+character(len=256) :: repartition_vhist_file = 'clm_vector_history.nc'
+character(len=256) :: repartition_analysis_file = 'dart_posterior_vector.nc'
 integer            :: verbose = 0
 
 namelist /dart_to_clm_nml/ dart_to_clm_input_file, &
                            dart_to_clm_output_file, &
+                           repartition_swe, &
+                           repartition_vhist_file, &
+                           repartition_analysis_file, &
                            verbose
 
 !----------------------------------------------------------------------
@@ -493,8 +497,8 @@ else
     call error_handler(E_ERR,routine,string1,source,text2=string2)
 endif
 
-ncid_clm_vector= nc_open_file_readonly('clm_vector_history.nc', &
-                 'confirm H2OSNO is in clm_vectory_history.nc')
+ncid_clm_vector= nc_open_file_readonly(repartition_vhist_file, &
+                 'confirm H2OSNO is in clm_vector_history.nc')
 
 if (nc_variable_exists(ncid_clm_vector, 'H2OSNO')) then
    call nc_get_variable(ncid_clm_vector, 'H2OSNO',  clm_H2OSNO)
@@ -534,7 +538,7 @@ else
     call error_handler(E_ERR,routine,string1,source,text2=string2)
 endif
 
-ncid_dart_vector= nc_open_file_readonly('dart_posterior_vector.nc', &
+ncid_dart_vector= nc_open_file_readonly(repartition_analysis_file, &
                  'confirm H2OSNO is in dart_posterior_vector.nc')
 
 if (nc_variable_exists(ncid_dart_vector, 'H2OSNO')) then
