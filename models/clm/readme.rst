@@ -197,12 +197,13 @@ variables) that matches the posterior SWE in *H2OSNO*.
 created in ``dart_to_clm`` that redistributes the posterior SWE into
 the appropriate prognostic variables. This **guarantees** that the posterior
 SWE of the prognostic snow variables matches the posterior SWE in H2OSNO.
-To invoke this repartitioning function the ``repartition_swe`` namelist option
-within ``&dart_to_clm_nml`` must be > 0. See the :doc:`dart_to_clm` for more 
-details describing the repartitioning function including guidance on how to 
-set up a case that repartitions snow. Note that we have not attempted to include
-any of the snow property variables most important to controlling albedo 
-(eg. grain radius, carbon, dust) within the DART state.  To what extent adjusting
+**When snow related variables are being updated within an assimilation it is
+recommended to invoke this repartitioning function by setting the namelist 
+option ``repartition_swe = 1 or 2`` within ``&dart_to_clm_nml``**. See the 
+:doc:`dart_to_clm` for more details describing the repartitioning function including
+guidance on how to set up a case that repartitions snow. Note that we have not
+attempted to include any of the snow property variables most important to controlling
+albedo (eg. grain radius, carbon, dust) within the DART state.  To what extent adjusting
 mass and dimensional properties of snow layers indirectly influences the
 albedo properties is an active scientific question. See the :doc:`dart_to_clm`
 for more details on how to implement ``repartition_swe`` if conserving albedo

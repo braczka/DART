@@ -143,6 +143,24 @@ is the total number of snow layers.
                                                   DART state ``clm_variables`` (``&model_nml``)       
    ========================== =================== =================================================================
 
+
+When adjusting snow layer variables within an assimilation, at a minimum, the ``clm_variables``
+within ``model_nml`` must include the following: 
+
+::
+
+clm_variables  = 'H2OSNO',      'QTY_SNOW_WATER',             '0.0', 'NA', 'vector'  , 'NO_COPY_BACK', 
+                 'SNOW_DEPTH',  'QTY_SNOW_THICKNESS',         '0.0', 'NA', 'restart' , 'UPDATE',
+                 'H2OSOI_LIQ',  'QTY_SOIL_LIQUID_WATER',      '0.0', 'NA', 'restart' , 'UPDATE',
+                 'H2OSOI_ICE',  'QTY_SOIL_ICE',               '0.0', 'NA', 'restart' , 'UPDATE',
+                 'DZSNO',       'QTY_SNOW_THICKNESS',         '0.0', 'NA', 'restart' , 'UPDATE',
+                 'ZSNO',        'QTY_SNOW_THICKNESS',         'NA',  'NA', 'restart' , 'UPDATE',
+                 'ZISNO',       'QTY_SNOW_THICKNESS',         'NA',  'NA', 'restart' , 'UPDATE',
+   /
+
+
+
+
 .. note::
 
      The H2OSOI_ICE and H2OSOI_LIQ variables include both snow layer and subsurface 
