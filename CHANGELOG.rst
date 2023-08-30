@@ -22,6 +22,67 @@ individual files.
 
 The changes are now listed with the most recent at the top.
 
+**August 21 2023 :: CAM-FV shell scripts. Tag v10.8.3**
+
+Performance improvements for CAM-FV shell scripts:
+
+- Avoid listing files if the CAM_PHIS file already exists.
+- Avoid using /var/tmp
+- RUNDIR defined after CIME_OUTPUT_ROOT change.
+- Warn if no inflation files found.
+
+**August 8 2023 :: MPAS-ATM constants and readthedocs fix. Tag v10.8.2**
+
+- MPAS-ATM constants updated to MPAS v5+
+- readthedocs build info updated.
+
+
+**July 27 2023 :: Bug-fixes for MOM6 and WRF. Tag v10.8.1**
+
+- bug-fixes:
+
+  - MOM6 read_model_time converts to dart time to match observation sequences.
+  - MOM6 salinity units converted to MSU during model_interpolate.
+  - WRF get_dist calculation fixed for observations with VERTISUNDEF.
+
+- doc-fixes:
+
+  - WOD and GTSPP converter documentation notes about salinity units.
+  - MOM6 documentation for setting the Gregorian calendar in CESM.
+  - comment fix in filter_mod.f90
+
+
+**June 27 2023 :: CAM-DART observation preprocessor. Tag v10.8.0**
+
+- Tool to remove observations above a given CAM level from an obs sequence file
+- bug-fixes:
+
+  -  MOM6 added check for too deep observations
+  -  test_interpolate_range write format corrected
+  -  removed unused code from mpas_atm directory
+- doc: removed outdated references to prep_buf.html
+
+**June 1 2023 :: Smoother removal. Tag v10.7.3**
+
+- Dead smoother code removed.
+- Documentation fix for quality control.
+- Cray Compiler Environment mkmf.template 
+
+**May 10 2023 :: Doc-fix. Tag v10.7.2**
+ 
+- conf.py changes for latest readthedocs. Fixes search and flyout menu.
+
+**May 8 2023 :: CLM-DART: CAM reanalysis site-level bias correction tool. Tag v10.7.1**
+
+- Initial version of bias correction for CAM reanalysis forcing for
+  site-level assimilation with CLM-DART.
+- mkmf change: make clean removes .mod files.
+- bug-fix: readthedocs yaml file for online documentation build.
+
+**April 21 2023 :: MOM6. Tag v10.7.0**  
+
+- CESM-MOM6 interface added to DART.
+
 **April 11 2023 :: Bug-fixes for WRF Tutorial and developer test quickbuilds. Tag v10.6.5**
 
 - Fixes the developer_tests quickbuild.sh files
